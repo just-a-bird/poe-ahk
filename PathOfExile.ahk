@@ -44,8 +44,7 @@ return
 !Backspace::SendCommand("cls")
 !c::Numpad1 ;Character
 
-LWin::DoToggleKeys()
-
+LWin::
 ~Enter::
 ~^f::
 DoToggleKeys()
@@ -64,25 +63,26 @@ DoToggleKeys() {
 }
 
 RotateQuicksilver() {
-    global QuicksilverIndex, QuicksilverStart, QuicksilverCount
-    QuicksilverIndex := Mod(QuicksilverIndex + 1, QuicksilverCount)
-    return (QuicksilverIndex + QuicksilverStart)
+    global QuicksilverKeys, QuicksilverIndex
+    return RotateFlask(QuicksilverKeys, QuicksilverIndex)
+}
+
+RotateFlask(keys, ByRef index) {
+    index := Mod(index + 1, StrLen(keys))
+    return SubStr(keys, index, 1)
 }
 
 InitChar() {
-    global CharIndex, CharNames, QuicksilverIndex, QuicksilverStart, QuicksilverCount
+    global CharIndex, CharNames, QuicksilverKeys, QuicksilverIndex
     name := CharNames[CharIndex]
     if (name == "Revolutionnaire") {
-        QuicksilverStart := 3
-        QuicksilverCount := 2
+        QuicksilverKeys := "34"
     } else if (name == "Vyollette") {
-        QuicksilverStart := 2
-        QuicksilverCount := 4
+        QuicksilverKeys := "2345"
     } else {
-        QuicksilverStart := 2
-        QuicksilverCount := 3
+        QuicksilverKeys := "234"
     }
-    QuicksilverIndex := -1
+    QuicksilverIndex := 0
     CornerNotify(2, "Character Name", name, "vc hc")
 }
 
@@ -100,6 +100,7 @@ C::Numpad2 ;Tree
 Z::Numpad3 ;Quest
 V::Numpad5 ;Challenge
 B::Numpad6 ;Atlas
+
 
 q::1 ;DoPiano(12) 
 
