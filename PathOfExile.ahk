@@ -1,38 +1,114 @@
-﻿#IfWinActive ahk_class POEWindowClass
+﻿global DEBUG := True
+
+global PoETitle := !DEBUG ? "ahk_class POEWindowClass" : "ahk_exe notepad.exe"
+
+#If WinActive(PoETitle)
 #SingleInstance Force
-#Persistent
 SendMode Input
 
-ToggleKeys := true
+ToggleKeys := True
 
-CharNames := ["Lesbophilia", "Vyollette", "Revolutionnaire", "Glacillys"]
-CharIndex := 1
-InitChar()
+Characters := []
+Characters.Index := 1
 
-Flasks := {Quicksilver: new FlaskGroup("345")}
+Characters.Push(new Character("Lesbophilia", new FlaskDefinitions()))
+Characters.Push(new Character("Vyollette", new FlaskDefinitions(1, "", 2345, "")))
+Characters.Push(new Character("Revolutionnaire", new FlaskDefinitions(1, 5, 34, 2)))
+Characters.Push(new Character("Glacillys", new FlaskDefinitions()))
 
-SetTimer, CornerNotifyVisibilityLoop, 10
+CornerNotifyCharacter(GetChar())
+
+GetChar(index="") {
+    if (index == "") {
+        index := Characters.Index
+    }
+    return Characters[index]
+}
+
+NextChar() {
+    global Characters
+    Characters.Index := Mod(Characters.Index, Characters.Length()) + 1
+    c := Characters[Characters.Index]
+    c.Reset()
+    return c
+}
+
+CornerNotifyCharacter(char) {
+    CornerNotify(2, "Character Profile", char.Name, "vc hc")
+}
+
+SetTimer, CornerNotifyVisibilityLoop, On
 
 CornerNotifyVisibilityLoop:
-    WinSet, AlwaysOnTop, % WinActive("ahk_class POEWindowClass") ? "On" : "Off", ahk_id %cornernotify_hwnd%
+    isActive := WinActive(PoETitle)
+    WinSet, AlwaysOnTop, % isActive ? "On" : "Off", ahk_id %cornernotify_hwnd%
+    if (!isActive) {
+        WinSet, Bottom,, ahk_id %cornernotify_hwnd%
+    }
 return
 
 SendCommand(command) {
     Send {Enter}/%command%{Enter}{Enter}{Up}{Up}{Escape}
 }
 
+global Characters := []
+
+
+class Character {
+    __New(name := "", flasks := "") {
+        if (flasks == "") {
+            flasks :=  new FlaskDefinitions()
+        }
+        this.Name := name
+        this.Flasks := flasks
+    }
+    Reset() {
+        this.Flasks.Reset()
+    }
+    Hotkey_q() {
+        this.Flasks.Life.SendRotate()
+    }
+    Hotkey_w() {
+        FlaskGroup.SendPiano(this.Flasks.Utility.Keys . this.Flasks.Speed.Rotate())
+    }
+    Hotkey_e() {
+        this.Flasks.Speed.SendRotate()
+    }
+    Hotkey_r() {
+        this.Flasks.Utility.SendPiano()
+    }
+    Hotkey_a() {
+        this.Flasks.Mana.SendRotate()
+    }
+}
+
 class FlaskDefinitions {
-    __New(life = "", mana = "", utility = "", speed = "") {
+    __New(life = 1, mana = 5, speed = 234, utility = "") {
         this.Life := new FlaskGroup(life)
         this.Mana := new FlaskGroup(mana)
-        this.Utility := new FlaskGroup(utility)
         this.Speed := new FlaskGroup(speed)
+        this.Utility := new FlaskGroup(utility)
+    }
+    Reset() {
+        this.Life.Reset()
+        this.Mana.Reset()
+        this.Speed.Reset()
+        this.Utility.Reset()
+    }
+    ToString() {
+        return "Life: "    . this.Life.ToString() . "`n"
+             . "Mana: "    . this.Mana.ToString() . "`n"
+             . "Speed: "   . this.Speed.ToString() . "`n"
+             . "Utility: " . this.Utility.ToString()
     }
 }
 
 class FlaskGroup {
     __New(keys) {
         this.Keys := keys
+        this.Index := 0
+    }
+    Reset() {
         this.Index := 0
     }
     Rotate() {
@@ -52,6 +128,9 @@ class FlaskGroup {
             Random, delay, 10, 50
             Sleep, delay
         }
+    }
+    ToString() {
+        return """" this.Keys """@" this.Index
     }
 }
 
@@ -78,6 +157,8 @@ return
 
 !c::Numpad1 ;Character
 
+^!c::CornerNotifyCharacter(NextChar())
+
 LWin::
 ~Enter::
 ~^f::
@@ -96,43 +177,7 @@ DoToggleKeys() {
     }
 }
 
-RotateQuicksilver() {
-    global QuicksilverKeys, QuicksilverIndex
-    return RotateFlask(QuicksilverKeys, QuicksilverIndex)
-}
-
-RotateFlask(keys, ByRef index) {
-    index := Mod(index + 1, StrLen(keys))
-    return SubStr(keys, index, 1)
-}
-
-InitChar() {
-    global CharIndex, CharNames, Flasks
-    name := CharNames[CharIndex]
-
-    life := "1"
-    mana := "5"
-    speed := "234"
-    utility := ""
-    
-    if (name == "Revolutionnaire") {
-        utility := "2"
-        speed := "34"
-    } else if (name == "Vyollette") {
-        speed := "2345"
-        mana := speed
-        utility := speed
-    }
-    CornerNotify(2, "Character Name", name, "vc hc")
-}
-
-^!c::
-    global CharIndex := Mod(CharIndex, CharNames.Length()) + 1
-    InitChar()
-return
-
-
-#If ToggleKeys && WinActive("ahk_class POEWindowClass")
+#If ToggleKeys && WinActive(PoETitle)
 
 X::NumpadDot ;Social
 G::Numpad0 ;Inventory
@@ -141,25 +186,11 @@ Z::Numpad3 ;Quest
 V::Numpad5 ;Challenge
 B::Numpad6 ;Atlas
 
+q::GetChar().Hotkey_q()
+w::GetChar().Hotkey_w()
+e::GetChar().Hotkey_e()
+r::GetChar().Hotkey_r()
+a::GetChar().Hotkey_a()
 
-q::1 ;DoPiano(12) 
-
-w::
-    Flasks.Quicksilver.SendPiano()
-/*    if (CharNames[CharIndex] == "Revolutionnaire") {
-        DoPiano("2" + RotateQuicksilver())
-    } else {
-        Send % RotateQuicksilver()
-    }
-*/
-return
-
-e::Flasks.Quicksilver.SendRotate()
-
-a::5
-;+XButton1::3
-;XButton2::f
-;XButton1::d
-;+Space::q
 ^WheelUp::Left
 ^WheelDown::Right
