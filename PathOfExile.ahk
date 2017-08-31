@@ -51,9 +51,6 @@ SendCommand(command) {
     Send {Enter}/%command%{Enter}{Enter}{Up}{Up}{Escape}
 }
 
-global Characters := []
-
-
 class Character {
     __New(name := "", flasks := "") {
         if (flasks == "") {
@@ -73,7 +70,7 @@ class Character {
     }
     Hotkey_e() {
         this.Flasks.Speed.SendRotate()
-    }
+    }+9
     Hotkey_r() {
         this.Flasks.Utility.SendPiano()
     }
