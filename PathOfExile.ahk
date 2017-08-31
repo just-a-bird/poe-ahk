@@ -1,4 +1,4 @@
-﻿global DEBUG := True
+﻿global DEBUG := False
 
 global PoETitle := !DEBUG ? "ahk_class POEWindowClass" : "ahk_exe notepad.exe"
 
@@ -11,10 +11,10 @@ ToggleKeys := True
 Characters := []
 Characters.Index := 1
 
-Characters.Push(new Character("Lesbophilia", new FlaskDefinitions()))
+Characters.Push(new Character("Lesbophilia", new FlaskDefinitions(1, 5, 234)))
 Characters.Push(new Character("Vyollette", new FlaskDefinitions(1, "", 2345, "")))
 Characters.Push(new Character("Revolutionnaire", new FlaskDefinitions(1, 5, 34, 2)))
-Characters.Push(new Character("Glacillys", new FlaskDefinitions()))
+Characters.Push(new Character("Glacillys", new FlaskDefinitions(1, 5, 234)))
 
 CornerNotifyCharacter(GetChar())
 
@@ -83,7 +83,7 @@ class Character {
 }
 
 class FlaskDefinitions {
-    __New(life = 1, mana = 5, speed = 234, utility = "") {
+    __New(life = 12, mana = 5, speed = "", utility = "") {
         this.Life := new FlaskGroup(life)
         this.Mana := new FlaskGroup(mana)
         this.Speed := new FlaskGroup(speed)
